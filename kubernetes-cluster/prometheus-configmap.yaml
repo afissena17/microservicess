@@ -1,0 +1,84 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+
+    scrape_configs:
+    - job_name: 'prometheus'
+      static_configs:
+      - targets: ['localhost:9090']
+
+    - job_name: 'perpustakaan-gateway'
+      static_configs:
+      - targets: ['perpustakaan-gateway:80']
+      metrics_path: '/actuator/prometheus'
+
+    - job_name: 'marketplace-gateway'
+      static_configs:
+      - targets: ['marketplace-gateway:80']
+      metrics_path: '/actuator/prometheus'
+
+    - job_name: 'buku-service'
+      static_configs:
+      - targets: ['buku:80']
+      metrics_path: '/actuator/prometheus'
+
+    - job_name: 'anggota-service'
+      static_configs:
+      - targets: ['anggota:80']
+      metrics_path: '/actuator/prometheus'
+
+    - job_name: 'peminjaman-service'
+      static_configs:
+      - targets: ['peminjaman:80']
+      metrics_path: '/actuator/prometheus'
+
+    - job_name: 'pengembalian-service'
+      static_configs:
+      - targets: ['pengembalian:80']
+      metrics_path: '/actuator/prometheus'
+
+    - job_name: 'produk-service'
+      static_configs:
+      - targets: ['produk:80']
+      metrics_path: '/actuator/prometheus'
+
+    - job_name: 'pelanggan-service'
+      static_configs:
+      - targets: ['pelanggan:80']
+      metrics_path: '/actuator/prometheus'
+
+    - job_name: 'order-service'
+      static_configs:
+      - targets: ['order:80']
+      metrics_path: '/actuator/prometheus'
+
+    - job_name: 'cqrs-service'
+      static_configs:
+      - targets: ['cqrs:80']
+      metrics_path: '/actuator/prometheus'
+
+    - job_name: 'eureka'
+      static_configs:
+      - targets: ['eureka:80']
+      metrics_path: '/actuator/prometheus'
+
+    - job_name: 'rabbitmq'
+      static_configs:
+      - targets: ['rabbitmq:15692']
+      metrics_path: '/metrics'
+
+    - job_name: 'mongodb'
+      static_configs:
+      - targets: ['mongodb:9216']
+      metrics_path: '/metrics'
+
+    - job_name: 'elasticsearch'
+      static_configs:
+      - targets: ['elasticsearch:9200']
+      metrics_path: '/_prometheus/metrics'

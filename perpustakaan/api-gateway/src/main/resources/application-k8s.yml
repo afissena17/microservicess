@@ -1,0 +1,54 @@
+server:
+  port: 9001
+
+spring:
+  application:
+    name: PERPUSTAKAAN-GATEWAY-EUREKA
+  cloud:
+    gateway:
+      server:
+        webmvc:
+          routes:
+          - id: ANGGOTA-SERVICE
+            uri: http://anggota
+            predicates:
+            - Path=/api/anggota/**
+          - id: BUKU-SERVICE
+            uri: http://buku
+            predicates:
+            - Path=/api/buku/**
+          - id: PEMINJAMAN-SERVICE
+            uri: http://peminjaman
+            predicates:
+            - Path=/api/peminjaman/**
+          - id: PENGEMBALIAN-SERVICE
+            uri: http://pengembalian
+            predicates:
+            - Path=/api/pengembalian/**
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: false
+    service-url:
+      defaultZone: ${EUREKA_URL:http://eureka/eureka}
+  instance:
+    hostname: perpustakaan-gateway
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: always
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+logging:
+  level:
+    org.springframework.web: INFO
+    com.anla: INFO

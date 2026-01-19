@@ -1,0 +1,1543 @@
+# ==========================================
+# ALL SERVICES DEPLOYMENT
+# ==========================================
+# Deploy semua service sekaligus (kecuali PVC)
+# Version: Auto-generated
+# 
+# Usage:
+#   kubectl apply -f all-services-k8s.yaml
+#
+# Note: PVC harus sudah dibuat terlebih dahulu:
+#   kubectl apply -f pvc.yaml
+# ==========================================
+
+---
+# ==================== elk-configmap ====================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logstash-config
+data:
+  logstash.conf: |
+    input {
+      tcp {
+        port => 5000
+        codec => json_lines
+      }
+      udp {
+        port => 5000
+        codec => json_lines
+      }
+    }
+
+    filter {
+      if [message] =~ /^\{.*\}$/ {
+        json {
+          source => "message"
+        }
+      }
+      mutate {
+        add_field => {
+          "[@metadata][index_prefix]" => "microservices"
+        }
+      }
+      date {
+        match => ["timestamp", "ISO8601"]
+        target => "@timestamp"
+      }
+    }
+
+    output {
+      elasticsearch {
+        hosts => ["http://elasticsearch:9200"]
+        index => "microservices-logs-%{+YYYY.MM.dd}"
+      }
+      stdout {
+        codec => rubydebug
+      }
+    }
+
+---
+# ==================== prometheus-configmap ====================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+
+    scrape_configs:
+    - job_name: 'prometheus'
+      static_configs:
+      - targets: ['localhost:9090']
+
+    - job_name: 'perpustakaan-gateway'
+      static_configs:
+      - targets: ['perpustakaan-gateway:80']
+      metrics_path: '/actuator/prometheus'
+
+    - job_name: 'marketplace-gateway'
+      static_configs:
+      - targets: ['marketplace-gateway:80']
+      metrics_path: '/actuator/prometheus'
+
+    - job_name: 'buku-service'
+      static_configs:
+      - targets: ['buku:80']
+      metrics_path: '/actuator/prometheus'
+
+    - job_name: 'anggota-service'
+      static_configs:
+      - targets: ['anggota:80']
+      metrics_path: '/actuator/prometheus'
+
+    - job_name: 'peminjaman-service'
+      static_configs:
+      - targets: ['peminjaman:80']
+      metrics_path: '/actuator/prometheus'
+
+    - job_name: 'pengembalian-service'
+      static_configs:
+      - targets: ['pengembalian:80']
+      metrics_path: '/actuator/prometheus'
+
+    - job_name: 'produk-service'
+      static_configs:
+      - targets: ['produk:80']
+      metrics_path: '/actuator/prometheus'
+
+    - job_name: 'pelanggan-service'
+      static_configs:
+      - targets: ['pelanggan:80']
+      metrics_path: '/actuator/prometheus'
+
+    - job_name: 'order-service'
+      static_configs:
+      - targets: ['order:80']
+      metrics_path: '/actuator/prometheus'
+
+    - job_name: 'cqrs-service'
+      static_configs:
+      - targets: ['cqrs:80']
+      metrics_path: '/actuator/prometheus'
+
+    - job_name: 'eureka'
+      static_configs:
+      - targets: ['eureka:80']
+      metrics_path: '/actuator/prometheus'
+
+    - job_name: 'rabbitmq'
+      static_configs:
+      - targets: ['rabbitmq:15692']
+      metrics_path: '/metrics'
+
+    - job_name: 'mongodb'
+      static_configs:
+      - targets: ['mongodb:9216']
+      metrics_path: '/metrics'
+
+    - job_name: 'elasticsearch'
+      static_configs:
+      - targets: ['elasticsearch:9200']
+      metrics_path: '/_prometheus/metrics'
+
+---
+# ==================== eureka ====================
+apiVersion: v1
+kind: Service
+metadata:
+  name: eureka
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8761
+    nodePort: 30761
+  selector:
+    app: eureka
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eureka
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: eureka
+  template:
+    metadata:
+      labels:
+        app: eureka
+    spec:
+      containers:
+      - name: eureka
+        image: itsanla/eureka:latest
+        ports:
+        - containerPort: 8761
+        env:
+        - name: SPRING_APPLICATION_NAME
+          value: "eureka-server"
+        - name: SERVER_PORT
+          value: "8761"
+        - name: EUREKA_CLIENT_REGISTER_WITH_EUREKA
+          value: "false"
+        - name: EUREKA_CLIENT_FETCH_REGISTRY
+          value: "false"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+
+---
+# ==================== cqrs ====================
+apiVersion: v1
+kind: Service
+metadata:
+  name: cqrs
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8088
+    nodePort: 30088
+  selector:
+    app: cqrs
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cqrs
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: cqrs
+  template:
+    metadata:
+      labels:
+        app: cqrs
+    spec:
+      containers:
+      - name: cqrs
+        image: itsanla/cqrs:latest
+        ports:
+        - containerPort: 8088
+        env:
+        - name: APP_SERVICES
+          value: "buku,anggota,peminjaman,pengembalian,produk,pelanggan,order"
+        - name: APP_AUTH_ENABLED
+          value: "false"
+        - name: SPRING_DATA_MONGODB_HOST
+          value: "mongodb"
+        - name: SPRING_DATA_MONGODB_PORT
+          value: "27017"
+        - name: SPRING_DATA_MONGODB_USERNAME
+          value: "itsanla"
+        - name: SPRING_DATA_MONGODB_PASSWORD
+          value: "070078"
+        - name: SPRING_DATA_MONGODB_AUTHENTICATION_DATABASE
+          value: "admin"
+        - name: SPRING_H2_CONSOLE_SETTINGS_WEB_ALLOW_OTHERS
+          value: "true"
+        - name: EUREKA_CLIENT_ENABLED
+          value: "true"
+        - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+          value: "http://eureka/eureka"
+        - name: EUREKA_INSTANCE_PREFER_IP_ADDRESS
+          value: "false"
+        - name: SPRING_RABBITMQ_HOST
+          value: "rabbitmq"
+        - name: SPRING_RABBITMQ_PORT
+          value: "5672"
+        - name: SPRING_RABBITMQ_USERNAME
+          value: "itsanla"
+        - name: SPRING_RABBITMQ_PASSWORD
+          value: "070078"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        volumeMounts:
+        - name: cqrs-data
+          mountPath: /data/h2
+      volumes:
+      - name: cqrs-data
+        persistentVolumeClaim:
+          claimName: cqrs-pvc
+
+---
+# ==================== mongodb ====================
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 80
+    targetPort: 27017
+  - name: mongodb
+    port: 27017
+    targetPort: 27017
+  - name: prometheus
+    port: 9216
+    targetPort: 9216
+  selector:
+    app: mongodb
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      containers:
+      - name: mongodb
+        image: mongo:8.0.17
+        ports:
+        - containerPort: 27017
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          value: "itsanla"
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          value: "070078"
+        - name: MONGO_INITDB_DATABASE
+          value: "cqrs_query"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        volumeMounts:
+        - name: mongodb-data
+          mountPath: /data/db
+        - name: mongodb-config
+          mountPath: /data/configdb
+      - name: mongodb-exporter
+        image: percona/mongodb_exporter:0.40
+        ports:
+        - containerPort: 9216
+        env:
+        - name: MONGODB_URI
+          value: "mongodb://itsanla:070078@localhost:27017"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+      volumes:
+      - name: mongodb-data
+        persistentVolumeClaim:
+          claimName: mongodb-pvc
+      - name: mongodb-config
+        emptyDir: {}
+
+---
+# ==================== mongo-express ====================
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-express
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8081
+    nodePort: 30081
+  selector:
+    app: mongo-express
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo-express
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: mongo-express
+  template:
+    metadata:
+      labels:
+        app: mongo-express
+    spec:
+      containers:
+      - name: mongo-express
+        image: mongo-express:latest
+        ports:
+        - containerPort: 8081
+        env:
+        - name: ME_CONFIG_MONGODB_URL
+          value: "mongodb://itsanla:070078@mongodb/admin"
+        - name: ME_CONFIG_BASICAUTH_USERNAME
+          value: "itsanla"
+        - name: ME_CONFIG_BASICAUTH_PASSWORD
+          value: "070078"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"
+
+---
+# ==================== rabbitmq ====================
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: 80
+    targetPort: 15672
+    nodePort: 30672
+  - name: amqp
+    port: 5672
+    targetPort: 5672
+  - name: prometheus
+    port: 15692
+    targetPort: 15692
+  selector:
+    app: rabbitmq
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: rabbitmq
+  template:
+    metadata:
+      labels:
+        app: rabbitmq
+    spec:
+      securityContext:
+        fsGroup: 999
+      initContainers:
+      - name: fix-permissions
+        image: busybox:latest
+        command:
+        - sh
+        - -c
+        - |
+          chown -R 999:999 /var/lib/rabbitmq
+          chmod 700 /var/lib/rabbitmq
+          if [ -f /var/lib/rabbitmq/.erlang.cookie ]; then
+            chmod 600 /var/lib/rabbitmq/.erlang.cookie
+          fi
+        volumeMounts:
+        - name: rabbitmq-data
+          mountPath: /var/lib/rabbitmq
+      containers:
+      - name: rabbitmq
+        image: rabbitmq:3-management-alpine
+        ports:
+        - containerPort: 5672
+        - containerPort: 15672
+        - containerPort: 15692
+        env:
+        - name: RABBITMQ_DEFAULT_USER
+          value: "itsanla"
+        - name: RABBITMQ_DEFAULT_PASS
+          value: "070078"
+        - name: RABBITMQ_DEFAULT_VHOST
+          value: "/"
+        command:
+        - sh
+        - -c
+        - |
+          rabbitmq-plugins enable rabbitmq_prometheus --offline
+          docker-entrypoint.sh rabbitmq-server
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        volumeMounts:
+        - name: rabbitmq-data
+          mountPath: /var/lib/rabbitmq
+      volumes:
+      - name: rabbitmq-data
+        persistentVolumeClaim:
+          claimName: rabbitmq-pvc
+
+---
+# ==================== elasticsearch ====================
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticsearch
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: 9200
+    targetPort: 9200
+    nodePort: 30920
+  - name: transport
+    port: 9300
+    targetPort: 9300
+  selector:
+    app: elasticsearch
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elasticsearch
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: elasticsearch
+  template:
+    metadata:
+      labels:
+        app: elasticsearch
+    spec:
+      securityContext:
+        fsGroup: 1000
+      initContainers:
+      - name: fix-permissions
+        image: busybox:1.36
+        command: ['sh', '-c', 'chown -R 1000:1000 /usr/share/elasticsearch/data']
+        volumeMounts:
+        - name: elasticsearch-data
+          mountPath: /usr/share/elasticsearch/data
+      containers:
+      - name: elasticsearch
+        image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+        ports:
+        - containerPort: 9200
+        - containerPort: 9300
+        env:
+        - name: discovery.type
+          value: single-node
+        - name: xpack.security.enabled
+          value: "false"
+        - name: ES_JAVA_OPTS
+          value: "-Xms2g -Xmx2g"
+        - name: action.auto_create_index
+          value: "true"
+        - name: xpack.monitoring.collection.enabled
+          value: "false"
+        - name: xpack.ml.enabled
+          value: "false"
+        - name: cluster.routing.allocation.disk.threshold_enabled
+          value: "false"
+        readinessProbe:
+          httpGet:
+            path: /_cluster/health
+            port: 9200
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+        lifecycle:
+          postStart:
+            exec:
+              command:
+              - /bin/bash
+              - -c
+              - |
+                until curl -s http://localhost:9200/_cluster/health | grep -E '"status":"(yellow|green)"'; do
+                  sleep 5
+                done
+                curl -X PUT "http://localhost:9200/_settings" -H 'Content-Type: application/json' -d '{"index.number_of_replicas": 0}'
+                curl -X PUT "http://localhost:9200/_index_template/default-replicas" -H 'Content-Type: application/json' -d '{"index_patterns": ["*"], "priority": 1, "template": {"settings": {"number_of_replicas": 0}}}'
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "500m"
+          limits:
+            memory: "4Gi"
+            cpu: "1000m"
+        volumeMounts:
+        - name: elasticsearch-data
+          mountPath: /usr/share/elasticsearch/data
+      volumes:
+      - name: elasticsearch-data
+        persistentVolumeClaim:
+          claimName: elasticsearch-pvc
+
+---
+# ==================== logstash ====================
+apiVersion: v1
+kind: Service
+metadata:
+  name: logstash
+spec:
+  type: ClusterIP
+  ports:
+  - name: tcp
+    port: 5000
+    targetPort: 5000
+    protocol: TCP
+  - name: udp
+    port: 5000
+    targetPort: 5000
+    protocol: UDP
+  - name: http
+    port: 80
+    targetPort: 9600
+  selector:
+    app: logstash
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: logstash
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: logstash
+  template:
+    metadata:
+      labels:
+        app: logstash
+    spec:
+      containers:
+      - name: logstash
+        image: docker.elastic.co/logstash/logstash:8.11.0
+        ports:
+        - containerPort: 5000
+          protocol: TCP
+        - containerPort: 5000
+          protocol: UDP
+        - containerPort: 9600
+        env:
+        - name: LS_JAVA_OPTS
+          value: "-Xms256m -Xmx256m"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        volumeMounts:
+        - name: logstash-config
+          mountPath: /usr/share/logstash/pipeline/logstash.conf
+          subPath: logstash.conf
+      volumes:
+      - name: logstash-config
+        configMap:
+          name: logstash-config
+
+---
+# ==================== kibana ====================
+apiVersion: v1
+kind: Service
+metadata:
+  name: kibana
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: 80
+    targetPort: 5601
+    nodePort: 30561
+  selector:
+    app: kibana
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kibana
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: kibana
+  template:
+    metadata:
+      labels:
+        app: kibana
+    spec:
+      initContainers:
+      - name: wait-for-elasticsearch
+        image: curlimages/curl:8.5.0
+        command: ['sh', '-c']
+        args:
+        - |
+          until curl -s http://elasticsearch:9200/_cluster/health | grep -E '"status":"(yellow|green)"'; do
+            echo "Waiting for Elasticsearch cluster..."
+            sleep 5
+          done
+          echo "Elasticsearch ready, waiting 60s for background tasks..."
+          sleep 60
+          echo "Kibana starting!"
+      containers:
+      - name: kibana
+        image: docker.elastic.co/kibana/kibana:8.11.0
+        ports:
+        - containerPort: 5601
+        env:
+        - name: ELASTICSEARCH_HOSTS
+          value: "http://elasticsearch"
+        - name: ELASTICSEARCH_REQUESTTIMEOUT
+          value: "60000"
+        - name: XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY
+          value: "min32characterstringforencryptionkey123"
+        readinessProbe:
+          httpGet:
+            path: /api/status
+            port: 5601
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
+        livenessProbe:
+          httpGet:
+            path: /api/status
+            port: 5601
+          initialDelaySeconds: 120
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+
+---
+# ==================== prometheus ====================
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: 80
+    targetPort: 9090
+    nodePort: 30090
+  selector:
+    app: prometheus
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      securityContext:
+        fsGroup: 65534
+      containers:
+      - name: prometheus
+        image: prom/prometheus:latest
+        ports:
+        - containerPort: 9090
+        args:
+        - '--config.file=/etc/prometheus/prometheus.yml'
+        - '--storage.tsdb.path=/prometheus'
+        - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+        - '--web.console.templates=/usr/share/prometheus/consoles'
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        volumeMounts:
+        - name: prometheus-config
+          mountPath: /etc/prometheus/prometheus.yml
+          subPath: prometheus.yml
+        - name: prometheus-data
+          mountPath: /prometheus
+      volumes:
+      - name: prometheus-config
+        configMap:
+          name: prometheus-config
+      - name: prometheus-data
+        persistentVolumeClaim:
+          claimName: prometheus-pvc
+
+---
+# ==================== grafana ====================
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: 80
+    targetPort: 3000
+    nodePort: 30300
+  selector:
+    app: grafana
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      securityContext:
+        fsGroup: 472
+      containers:
+      - name: grafana
+        image: grafana/grafana:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: GF_SECURITY_ADMIN_USER
+          value: "itsanla"
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          value: "070078"
+        - name: GF_USERS_ALLOW_SIGN_UP
+          value: "false"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"
+        volumeMounts:
+        - name: grafana-data
+          mountPath: /var/lib/grafana
+      volumes:
+      - name: grafana-data
+        persistentVolumeClaim:
+          claimName: grafana-pvc
+
+---
+# ==================== jenkins ====================
+apiVersion: v1
+kind: Service
+metadata:
+  name: jenkins
+spec:
+  selector:
+    app: jenkins
+  type: NodePort
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+    nodePort: 30000
+  - name: agent
+    port: 50000
+    targetPort: 50000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: jenkins
+  template:
+    metadata:
+      labels:
+        app: jenkins
+    spec:
+      securityContext:
+        runAsUser: 0
+      containers:
+      - name: jenkins
+        image: jenkins/jenkins:lts-jdk17
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          apt-get update && apt-get install -y docker.io
+          /usr/local/bin/jenkins.sh
+        ports:
+        - containerPort: 8080
+        - containerPort: 50000
+        env:
+        - name: JAVA_OPTS
+          value: "-Xmx1024m"
+        - name: DOCKER_HOST
+          value: "tcp://localhost:2375"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        volumeMounts:
+        - name: jenkins-data
+          mountPath: /var/jenkins_home
+      - name: dind
+        image: docker:24-dind
+        securityContext:
+          privileged: true
+        env:
+        - name: DOCKER_TLS_CERTDIR
+          value: ""
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        volumeMounts:
+        - name: docker-storage
+          mountPath: /var/lib/docker
+      volumes:
+      - name: jenkins-data
+        persistentVolumeClaim:
+          claimName: jenkins-pvc
+      - name: docker-storage
+        emptyDir: {}
+
+---
+# ==================== buku ====================
+apiVersion: v1
+kind: Service
+metadata:
+  name: buku
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8084
+    nodePort: 30084
+  selector:
+    app: buku
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: buku
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: buku
+  template:
+    metadata:
+      labels:
+        app: buku
+    spec:
+      containers:
+      - name: buku
+        image: itsanla/buku:latest
+        ports:
+        - containerPort: 8084
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "k8s"
+        - name: EUREKA_URL
+          value: "http://eureka/eureka"
+        - name: CQRS_SERVICE_URL
+          value: "http://cqrs"
+        - name: LOGSTASH_HOST
+          value: "logstash"
+        - name: LOGSTASH_PORT
+          value: "5000"
+        - name: SPRING_RABBITMQ_HOST
+          value: "rabbitmq"
+        - name: SPRING_RABBITMQ_PORT
+          value: "5672"
+        - name: SPRING_RABBITMQ_USERNAME
+          value: "itsanla"
+        - name: SPRING_RABBITMQ_PASSWORD
+          value: "070078"
+          value: "5000"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+
+---
+# ==================== anggota ====================
+apiVersion: v1
+kind: Service
+metadata:
+  name: anggota
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8085
+    nodePort: 30085
+  selector:
+    app: anggota
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: anggota
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: anggota
+  template:
+    metadata:
+      labels:
+        app: anggota
+    spec:
+      containers:
+      - name: anggota
+        image: itsanla/anggota:latest
+        ports:
+        - containerPort: 8085
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "k8s"
+        - name: EUREKA_URL
+          value: "http://eureka/eureka"
+        - name: CQRS_SERVICE_URL
+          value: "http://cqrs"
+        - name: LOGSTASH_HOST
+          value: "logstash"
+        - name: LOGSTASH_PORT
+          value: "5000"
+        - name: SPRING_RABBITMQ_HOST
+          value: "rabbitmq"
+        - name: SPRING_RABBITMQ_PORT
+          value: "5672"
+        - name: SPRING_RABBITMQ_USERNAME
+          value: "itsanla"
+        - name: SPRING_RABBITMQ_PASSWORD
+          value: "070078"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+
+---
+# ==================== peminjaman ====================
+apiVersion: v1
+kind: Service
+metadata:
+  name: peminjaman
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8087
+    nodePort: 30087
+  selector:
+    app: peminjaman
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: peminjaman
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: peminjaman
+  template:
+    metadata:
+      labels:
+        app: peminjaman
+    spec:
+      containers:
+      - name: peminjaman
+        image: itsanla/peminjaman:latest
+        ports:
+        - containerPort: 8087
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "k8s"
+        - name: EUREKA_URL
+          value: "http://eureka/eureka"
+        - name: CQRS_SERVICE_URL
+          value: "http://cqrs"
+        - name: ANGGOTA_SERVICE_URL
+          value: "http://anggota"
+        - name: BUKU_SERVICE_URL
+          value: "http://buku"
+        - name: PENGEMBALIAN_SERVICE_URL
+          value: "http://pengembalian"
+        - name: RABBITMQ_HOST
+          value: "rabbitmq"
+        - name: RABBITMQ_PORT
+          value: "5672"
+        - name: RABBITMQ_USER
+          value: "itsanla"
+        - name: RABBITMQ_PASSWORD
+          value: "070078"
+        - name: LOGSTASH_HOST
+          value: "logstash"
+        - name: LOGSTASH_PORT
+          value: "5000"
+        - name: SPRING_RABBITMQ_HOST
+          value: "rabbitmq"
+        - name: SPRING_RABBITMQ_PORT
+          value: "5672"
+        - name: SPRING_RABBITMQ_USERNAME
+          value: "itsanla"
+        - name: SPRING_RABBITMQ_PASSWORD
+          value: "070078"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+
+---
+# ==================== pengembalian ====================
+apiVersion: v1
+kind: Service
+metadata:
+  name: pengembalian
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8086
+    nodePort: 30086
+  selector:
+    app: pengembalian
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pengembalian
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: pengembalian
+  template:
+    metadata:
+      labels:
+        app: pengembalian
+    spec:
+      containers:
+      - name: pengembalian
+        image: itsanla/pengembalian:latest
+        ports:
+        - containerPort: 8086
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "k8s"
+        - name: EUREKA_URL
+          value: "http://eureka/eureka"
+        - name: CQRS_SERVICE_URL
+          value: "http://cqrs"
+        - name: LOGSTASH_HOST
+          value: "logstash"
+        - name: LOGSTASH_PORT
+          value: "5000"
+        - name: SPRING_RABBITMQ_HOST
+          value: "rabbitmq"
+        - name: SPRING_RABBITMQ_PORT
+          value: "5672"
+        - name: SPRING_RABBITMQ_USERNAME
+          value: "itsanla"
+        - name: SPRING_RABBITMQ_PASSWORD
+          value: "070078"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+
+---
+# ==================== perpustakaan-gateway ====================
+apiVersion: v1
+kind: Service
+metadata:
+  name: perpustakaan-gateway
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: 80
+    targetPort: 9001
+    nodePort: 30901
+  selector:
+    app: perpustakaan-gateway
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: perpustakaan-gateway
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: perpustakaan-gateway
+  template:
+    metadata:
+      labels:
+        app: perpustakaan-gateway
+    spec:
+      containers:
+      - name: perpustakaan-gateway
+        image: itsanla/perpustakaan-gateway:latest
+        ports:
+        - containerPort: 9001
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "k8s"
+        - name: EUREKA_URL
+          value: "http://eureka/eureka"
+        - name: LOGSTASH_HOST
+          value: "logstash"
+        - name: LOGSTASH_PORT
+          value: "5000"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+
+---
+# ==================== produk ====================
+apiVersion: v1
+kind: Service
+metadata:
+  name: produk
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8081
+    nodePort: 30092
+  selector:
+    app: produk
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: produk
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: produk
+  template:
+    metadata:
+      labels:
+        app: produk
+    spec:
+      containers:
+      - name: produk
+        image: itsanla/produk:latest
+        ports:
+        - containerPort: 8081
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "k8s"
+        - name: EUREKA_URL
+          value: "http://eureka/eureka"
+        - name: CQRS_SERVICE_URL
+          value: "http://cqrs"
+        - name: LOGSTASH_HOST
+          value: "logstash"
+        - name: LOGSTASH_PORT
+          value: "5000"
+        - name: SPRING_RABBITMQ_HOST
+          value: "rabbitmq"
+        - name: SPRING_RABBITMQ_PORT
+          value: "5672"
+        - name: SPRING_RABBITMQ_USERNAME
+          value: "itsanla"
+        - name: SPRING_RABBITMQ_PASSWORD
+          value: "070078"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+
+---
+# ==================== pelanggan ====================
+apiVersion: v1
+kind: Service
+metadata:
+  name: pelanggan
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8082
+    nodePort: 30091
+  selector:
+    app: pelanggan
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pelanggan
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: pelanggan
+  template:
+    metadata:
+      labels:
+        app: pelanggan
+    spec:
+      containers:
+      - name: pelanggan
+        image: itsanla/pelanggan:latest
+        ports:
+        - containerPort: 8082
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "k8s"
+        - name: EUREKA_URL
+          value: "http://eureka/eureka"
+        - name: CQRS_SERVICE_URL
+          value: "http://cqrs"
+        - name: LOGSTASH_HOST
+          value: "logstash"
+        - name: LOGSTASH_PORT
+          value: "5000"
+        - name: SPRING_RABBITMQ_HOST
+          value: "rabbitmq"
+        - name: SPRING_RABBITMQ_PORT
+          value: "5672"
+        - name: SPRING_RABBITMQ_USERNAME
+          value: "itsanla"
+        - name: SPRING_RABBITMQ_PASSWORD
+          value: "070078"
+          value: "5000"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+
+---
+# ==================== order ====================
+apiVersion: v1
+kind: Service
+metadata:
+  name: order
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8083
+    nodePort: 30083
+  selector:
+    app: order
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: order
+  template:
+    metadata:
+      labels:
+        app: order
+    spec:
+      containers:
+      - name: order
+        image: itsanla/order:latest
+        ports:
+        - containerPort: 8083
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "k8s"
+        - name: EUREKA_URL
+          value: "http://eureka/eureka"
+        - name: CQRS_SERVICE_URL
+          value: "http://cqrs"
+        - name: PELANGGAN_SERVICE_URL
+          value: "http://pelanggan"
+        - name: PRODUK_SERVICE_URL
+          value: "http://produk"
+        - name: LOGSTASH_HOST
+          value: "logstash"
+        - name: LOGSTASH_PORT
+          value: "5000"
+        - name: SPRING_RABBITMQ_HOST
+          value: "rabbitmq"
+        - name: SPRING_RABBITMQ_PORT
+          value: "5672"
+        - name: SPRING_RABBITMQ_USERNAME
+          value: "itsanla"
+        - name: SPRING_RABBITMQ_PASSWORD
+          value: "070078"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+
+---
+# ==================== marketplace-gateway ====================
+apiVersion: v1
+kind: Service
+metadata:
+  name: marketplace-gateway
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: 80
+    targetPort: 9000
+    nodePort: 30900
+  selector:
+    app: marketplace-gateway
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: marketplace-gateway
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: marketplace-gateway
+  template:
+    metadata:
+      labels:
+        app: marketplace-gateway
+    spec:
+      containers:
+      - name: marketplace-gateway
+        image: itsanla/marketplace-gateway:latest
+        ports:
+        - containerPort: 9000
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "k8s"
+        - name: EUREKA_URL
+          value: "http://eureka/eureka"
+        - name: LOGSTASH_HOST
+          value: "logstash"
+        - name: LOGSTASH_PORT
+          value: "5000"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+

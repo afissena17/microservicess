@@ -1,0 +1,352 @@
+version: '3.8'
+
+services:
+  # Infrastructure
+  eureka:
+    image: itsanla/eureka:latest
+    container_name: eureka
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_APPLICATION_NAME=eureka-server
+      - SERVER_PORT=8761
+      - EUREKA_CLIENT_REGISTER_WITH_EUREKA=false
+      - EUREKA_CLIENT_FETCH_REGISTRY=false
+    networks:
+      - microservices
+
+  mongodb:
+    image: mongo:8.0.17
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=itsanla
+      - MONGO_INITDB_ROOT_PASSWORD=070078
+      - MONGO_INITDB_DATABASE=cqrs_query
+    volumes:
+      - mongodb-data:/data/db
+    networks:
+      - microservices
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo-express
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_URL=mongodb://itsanla:070078@mongodb/admin
+      - ME_CONFIG_BASICAUTH_USERNAME=itsanla
+      - ME_CONFIG_BASICAUTH_PASSWORD=070078
+    depends_on:
+      - mongodb
+    networks:
+      - microservices
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+      - "15692:15692"
+    environment:
+      - RABBITMQ_DEFAULT_USER=itsanla
+      - RABBITMQ_DEFAULT_PASS=070078
+      - RABBITMQ_DEFAULT_VHOST=/
+    command: sh -c "rabbitmq-plugins enable rabbitmq_prometheus --offline && docker-entrypoint.sh rabbitmq-server"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - microservices
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: elasticsearch
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms2g -Xmx2g
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - microservices
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.11.0
+    container_name: logstash
+    ports:
+      - "5000:5000"
+      - "9600:9600"
+    environment:
+      - LS_JAVA_OPTS=-Xms256m -Xmx256m
+    volumes:
+      - ./elk/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    depends_on:
+      - elasticsearch
+    networks:
+      - microservices
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_REQUESTTIMEOUT=120000
+    depends_on:
+      - elasticsearch
+    networks:
+      - microservices
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitor/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - microservices
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=itsanla
+      - GF_SECURITY_ADMIN_PASSWORD=070078
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - microservices
+
+  cqrs:
+    image: itsanla/cqrs:latest
+    container_name: cqrs
+    ports:
+      - "8088:8088"
+    environment:
+      - APP_SERVICES=buku,anggota,peminjaman,pengembalian,produk,pelanggan,order
+      - APP_AUTH_ENABLED=false
+      - SPRING_DATA_MONGODB_HOST=mongodb
+      - SPRING_DATA_MONGODB_PORT=27017
+      - SPRING_DATA_MONGODB_USERNAME=itsanla
+      - SPRING_DATA_MONGODB_PASSWORD=070078
+      - SPRING_DATA_MONGODB_AUTHENTICATION_DATABASE=admin
+      - SPRING_H2_CONSOLE_SETTINGS_WEB_ALLOW_OTHERS=true
+      - EUREKA_CLIENT_ENABLED=true
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=itsanla
+      - SPRING_RABBITMQ_PASSWORD=070078
+    volumes:
+      - cqrs-data:/data/h2
+    depends_on:
+      - eureka
+      - mongodb
+      - rabbitmq
+    networks:
+      - microservices
+
+  # Perpustakaan Services
+  buku:
+    image: itsanla/buku:latest
+    container_name: buku
+    ports:
+      - "8084:8084"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_URL=http://eureka:8761/eureka
+      - CQRS_SERVICE_URL=http://cqrs:8088
+      - LOGSTASH_HOST=logstash
+      - LOGSTASH_PORT=5000
+    depends_on:
+      - eureka
+      - cqrs
+      - logstash
+    networks:
+      - microservices
+
+  anggota:
+    image: itsanla/anggota:latest
+    container_name: anggota
+    ports:
+      - "8085:8085"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_URL=http://eureka:8761/eureka
+      - CQRS_SERVICE_URL=http://cqrs:8088
+      - LOGSTASH_HOST=logstash
+      - LOGSTASH_PORT=5000
+    depends_on:
+      - eureka
+      - cqrs
+      - logstash
+    networks:
+      - microservices
+
+  peminjaman:
+    image: itsanla/peminjaman:latest
+    container_name: peminjaman
+    ports:
+      - "8087:8087"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_URL=http://eureka:8761/eureka
+      - CQRS_SERVICE_URL=http://cqrs:8088
+      - ANGGOTA_SERVICE_URL=http://anggota:8085
+      - BUKU_SERVICE_URL=http://buku:8084
+      - PENGEMBALIAN_SERVICE_URL=http://pengembalian:8086
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=itsanla
+      - RABBITMQ_PASSWORD=070078
+      - LOGSTASH_HOST=logstash
+      - LOGSTASH_PORT=5000
+    depends_on:
+      - eureka
+      - cqrs
+      - rabbitmq
+      - logstash
+    networks:
+      - microservices
+
+  pengembalian:
+    image: itsanla/pengembalian:latest
+    container_name: pengembalian
+    ports:
+      - "8086:8086"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_URL=http://eureka:8761/eureka
+      - CQRS_SERVICE_URL=http://cqrs:8088
+      - LOGSTASH_HOST=logstash
+      - LOGSTASH_PORT=5000
+    depends_on:
+      - eureka
+      - cqrs
+      - logstash
+    networks:
+      - microservices
+
+  perpustakaan-gateway:
+    image: itsanla/perpustakaan-gateway:latest
+    container_name: perpustakaan-gateway
+    ports:
+      - "9001:9001"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_URL=http://eureka:8761/eureka
+      - LOGSTASH_HOST=logstash
+      - LOGSTASH_PORT=5000
+    depends_on:
+      - eureka
+      - buku
+      - anggota
+      - peminjaman
+      - pengembalian
+      - logstash
+    networks:
+      - microservices
+
+  # Marketplace Services
+  produk:
+    image: itsanla/produk:latest
+    container_name: produk
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_URL=http://eureka:8761/eureka
+      - CQRS_SERVICE_URL=http://cqrs:8088
+      - LOGSTASH_HOST=logstash
+      - LOGSTASH_PORT=5000
+    depends_on:
+      - eureka
+      - cqrs
+      - logstash
+    networks:
+      - microservices
+
+  pelanggan:
+    image: itsanla/pelanggan:latest
+    container_name: pelanggan
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_URL=http://eureka:8761/eureka
+      - CQRS_SERVICE_URL=http://cqrs:8088
+      - LOGSTASH_HOST=logstash
+      - LOGSTASH_PORT=5000
+    depends_on:
+      - eureka
+      - cqrs
+      - logstash
+    networks:
+      - microservices
+
+  order:
+    image: itsanla/order:latest
+    container_name: order
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_URL=http://eureka:8761/eureka
+      - CQRS_SERVICE_URL=http://cqrs:8088
+      - PELANGGAN_SERVICE_URL=http://pelanggan:8082
+      - PRODUK_SERVICE_URL=http://produk:8081
+      - LOGSTASH_HOST=logstash
+      - LOGSTASH_PORT=5000
+    depends_on:
+      - eureka
+      - cqrs
+      - logstash
+    networks:
+      - microservices
+
+  marketplace-gateway:
+    image: itsanla/marketplace-gateway:latest
+    container_name: marketplace-gateway
+    ports:
+      - "9000:9000"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_URL=http://eureka:8761/eureka
+      - LOGSTASH_HOST=logstash
+      - LOGSTASH_PORT=5000
+    depends_on:
+      - eureka
+      - produk
+      - pelanggan
+      - order
+      - logstash
+    networks:
+      - microservices
+
+volumes:
+  mongodb-data:
+  rabbitmq-data:
+  elasticsearch-data:
+  prometheus-data:
+  grafana-data:
+  cqrs-data:
+
+networks:
+  microservices:
+    driver: bridge

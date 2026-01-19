@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<ruleset name="Essential Rules"
+    xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.net/ruleset_2_0_0.xsd">
+    <description>
+        Essential PMD rules focusing on critical issues only.
+    </description>
+
+    <!-- Best Practices - Keep essential ones only -->
+    <rule ref="category/java/bestpractices.xml">
+        <exclude name="JUnitTestsShouldIncludeAssert"/>
+        <exclude name="JUnitAssertionsShouldIncludeMessage"/>
+        <exclude name="AtLeastOneConstructor"/>
+        <exclude name="UseUtilityClass"/>
+        <exclude name="GuardLogStatement"/>
+    </rule>
+    
+    <!-- Code Style - Remove comment requirements and naming restrictions -->
+    <rule ref="category/java/codestyle.xml">
+        <exclude name="CommentRequired"/>
+        <exclude name="ShortVariable"/>
+        <exclude name="ShortClassName"/>
+        <exclude name="LongVariable"/>
+        <exclude name="PackageCase"/>
+        <exclude name="MethodArgumentCouldBeFinal"/>
+        <exclude name="LocalVariableCouldBeFinal"/>
+        <exclude name="UnnecessaryConstructor"/>
+        <exclude name="CommentDefaultAccessModifier"/>
+        <exclude name="FieldNamingConventions"/>
+        <exclude name="OnlyOneReturn"/>
+        <exclude name="AtLeastOneConstructor"/>
+    </rule>
+    
+    <!-- Design - Keep important structural rules, exclude overly strict ones -->
+    <rule ref="category/java/design.xml">
+        <exclude name="LoosePackageCoupling"/>
+        <exclude name="DataClass"/>
+        <exclude name="LawOfDemeter"/>
+        <exclude name="AvoidDeeplyNestedIfStmts"/>
+        <exclude name="CyclomaticComplexity"/>
+        <exclude name="NPathComplexity"/>
+        <exclude name="ExcessiveImports"/>
+        <exclude name="TooManyMethods"/>
+        <exclude name="TooManyFields"/>
+    </rule>
+    
+    <!-- Error Prone - Keep critical error detection -->
+    <rule ref="category/java/errorprone.xml">
+        <exclude name="AvoidCatchingGenericException"/>
+        <exclude name="EmptyCatchBlock"/>
+        <exclude name="NullAssignment"/>
+        <exclude name="UncommentedEmptyMethodBody"/>
+        <exclude name="UncommentedEmptyConstructor"/>
+        <exclude name="UnnecessaryBooleanAssertion"/>
+        <exclude name="BeanMembersShouldSerialize"/>
+        <exclude name="DataflowAnomalyAnalysis"/>
+    </rule>
+    
+    <!-- Performance - Keep performance critical rules -->
+    <rule ref="category/java/performance.xml">
+        <exclude name="AvoidInstantiatingObjectsInLoops"/>
+    </rule>
+    
+    <!-- Security - Keep all security rules -->
+    <rule ref="category/java/security.xml" />
+</ruleset>

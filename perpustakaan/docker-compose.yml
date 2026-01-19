@@ -1,0 +1,146 @@
+version: '3.8'
+
+services:
+  # ==================== BUKU SERVICE ====================
+  buku-service:
+    image: itsanla/buku:latest
+    container_name: buku-service
+    ports:
+      - "8084:8084"
+    environment:
+      SERVER_PORT: 8084
+      SPRING_APPLICATION_NAME: BUKU-SERVICE
+      
+      # Eureka Configuration
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://${EUREKA_IP}:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
+      EUREKA_INSTANCE_IP_ADDRESS: ${VPS_PERPUSTAKAAN_IP}
+      
+      # CQRS Configuration
+      CQRS_SERVICE_URL: http://${CQRS_IP}:8088
+      CQRS_SERVICE_NAME: buku
+      CQRS_AUTH_ENABLED: "true"
+      
+      # Logging to ELK
+      LOGSTASH_HOST: ${LOGSTASH_IP}
+      LOGSTASH_PORT: 5000
+    networks:
+      - perpustakaan-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ==================== ANGGOTA SERVICE ====================
+  anggota-service:
+    image: itsanla/anggota:latest
+    container_name: anggota-service
+    ports:
+      - "8085:8085"
+    environment:
+      SERVER_PORT: 8085
+      SPRING_APPLICATION_NAME: ANGGOTA-SERVICE
+      
+      # Eureka Configuration
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://${EUREKA_IP}:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
+      EUREKA_INSTANCE_IP_ADDRESS: ${VPS_PERPUSTAKAAN_IP}
+      
+      # CQRS Configuration
+      CQRS_SERVICE_URL: http://${CQRS_IP}:8088
+      CQRS_SERVICE_NAME: anggota
+      CQRS_AUTH_ENABLED: "true"
+      
+      # Logging to ELK
+      LOGSTASH_HOST: ${LOGSTASH_IP}
+      LOGSTASH_PORT: 5000
+    networks:
+      - perpustakaan-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ==================== PENGEMBALIAN SERVICE ====================
+  pengembalian-service:
+    image: itsanla/pengembalian:latest
+    container_name: pengembalian-service
+    ports:
+      - "8086:8086"
+    environment:
+      SERVER_PORT: 8086
+      SPRING_APPLICATION_NAME: PENGEMBALIAN-SERVICE
+      
+      # Eureka Configuration
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://${EUREKA_IP}:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
+      EUREKA_INSTANCE_IP_ADDRESS: ${VPS_PERPUSTAKAAN_IP}
+      
+      # CQRS Configuration
+      CQRS_SERVICE_URL: http://${CQRS_IP}:8088
+      CQRS_SERVICE_NAME: pengembalian
+      CQRS_AUTH_ENABLED: "true"
+      
+      # Logging to ELK
+      LOGSTASH_HOST: ${LOGSTASH_IP}
+      LOGSTASH_PORT: 5000
+    networks:
+      - perpustakaan-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8086/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ==================== PEMINJAMAN SERVICE ====================
+  peminjaman-service:
+    image: itsanla/peminjaman:latest
+    container_name: peminjaman-service
+    ports:
+      - "8087:8087"
+    environment:
+      SERVER_PORT: 8087
+      SPRING_APPLICATION_NAME: PEMINJAMAN-SERVICE
+      
+      # Eureka Configuration
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://${EUREKA_IP}:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
+      EUREKA_INSTANCE_IP_ADDRESS: ${VPS_PERPUSTAKAAN_IP}
+      
+      # CQRS Configuration
+      CQRS_SERVICE_URL: http://${CQRS_IP}:8088
+      CQRS_SERVICE_NAME: peminjaman
+      CQRS_AUTH_ENABLED: "true"
+      
+      # RabbitMQ Configuration
+      SPRING_RABBITMQ_HOST: ${RABBITMQ_IP}
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USER}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      
+      # Logging to ELK
+      LOGSTASH_HOST: ${LOGSTASH_IP}
+      LOGSTASH_PORT: 5000
+    networks:
+      - perpustakaan-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8087/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+
+networks:
+  perpustakaan-network:
+    driver: bridge

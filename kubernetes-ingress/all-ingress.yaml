@@ -1,0 +1,193 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: main-ingress
+  annotations:
+    # Perintah sakti untuk auto-ssl 16 domain
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # Upload size diperbesar agar upload file di Jenkins/App tidak error
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+spec:
+  ingressClassName: nginx
+  tls:
+  # Cert-manager akan menyimpan sertifikat di secret bernama 'all-domains-tls'
+  - hosts:
+    - anggota.mooo.com
+    - bukuu.mooo.com
+    - peminjamann.mooo.com
+    - pengembalian.mooo.com
+    - perpustakaan-gateway.mooo.com
+    - jenkinss.mooo.com
+    - marketplace-gateway.mooo.com
+    - orderr.mooo.com
+    - pelanggan.mooo.com
+    - produk.mooo.com
+    - dbh2.mooo.com
+    - dbmongo.mooo.com
+    - eurekaa.mooo.com
+    - graffana.mooo.com
+    - kibbana.mooo.com
+    - rabbittmq.mooo.com
+    secretName: all-domains-tls
+  rules:
+  # 1. Anggota
+  - host: anggota.mooo.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: anggota
+            port: { number: 80 }
+  # 2. Buku
+  - host: bukuu.mooo.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: buku
+            port: { number: 80 }
+  # 3. Peminjaman
+  - host: peminjamann.mooo.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: peminjaman
+            port: { number: 80 }
+  # 4. Pengembalian
+  - host: pengembalian.mooo.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: pengembalian
+            port: { number: 80 }
+  # 5. Perpustakaan Gateway
+  - host: perpustakaan-gateway.mooo.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: perpustakaan-gateway
+            port: { number: 80 }
+  # 6. Jenkins
+  - host: jenkinss.mooo.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: jenkins
+            port: { number: 80 }
+  # 7. Marketplace Gateway
+  - host: marketplace-gateway.mooo.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: marketplace-gateway
+            port: { number: 80 }
+  # 8. Order
+  - host: orderr.mooo.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: order
+            port: { number: 80 }
+  # 9. Pelanggan
+  - host: pelanggan.mooo.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: pelanggan
+            port: { number: 80 }
+  # 10. Produk
+  - host: produk.mooo.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: produk
+            port: { number: 80 }
+  # 11. H2 Database (Lewat CQRS Service)
+  - host: dbh2.mooo.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: cqrs
+            port: { number: 80 }
+  # 12. Mongo Express (UI Admin Mongo)
+  - host: dbmongo.mooo.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: mongo-express
+            port: { number: 80 }
+  # 13. Eureka Dashboard
+  - host: eurekaa.mooo.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: eureka
+            port: { number: 80 }
+  # 14. Grafana
+  - host: graffana.mooo.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: grafana
+            port: { number: 80 }
+  # 15. Kibana
+  - host: kibbana.mooo.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: kibana
+            port: { number: 80 }
+  # 16. RabbitMQ Management UI
+  - host: rabbittmq.mooo.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: rabbitmq
+            port: { number: 80 }

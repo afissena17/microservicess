@@ -1,0 +1,146 @@
+# ==================== JAVA ====================
+*.class
+*.jar
+*.war
+*.ear
+*.log
+*.ctxt
+.mtj.tmp/
+hs_err_pid*
+
+# ==================== MAVEN ====================
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# ==================== SPRING BOOT ====================
+.springBeans
+spring-boot-starter-parent/
+
+# ==================== IDE ====================
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# Eclipse
+.classpath
+.project
+.settings/
+.metadata/
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.loadpath
+.recommenders
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# NetBeans
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# ==================== DATABASE ====================
+# H2 Database
+*.mv.db
+*.trace.db
+h2db/
+*.h2.db
+
+# MongoDB
+mongodb_data/
+
+# PostgreSQL
+postgres_data/
+
+# ==================== DOCKER ====================
+# Docker volumes
+*_data/
+
+# ==================== LOGS ====================
+*.log
+logs/
+log/
+
+# ==================== TEMPORARY FILES ====================
+*.txt
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+
+# ==================== OS ====================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+# ==================== NODE (if any) ====================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ==================== BUILD OUTPUT ====================
+build/
+dist/
+out/
+
+# ==================== SENSITIVE DATA ====================
+*.env
+.env.local
+.env.*.local
+secrets/
+credentials/
+
+# ==================== BACKUP ====================
+*.backup
+backup/
+
+# ==================== COMPILED CLASS FILES ====================
+*.class
+
+# ==================== PACKAGE FILES ====================
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# ==================== KEEP IMPORTANT FILES ====================
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/

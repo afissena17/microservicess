@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  cqrs:
+    image: itsanla/cqrs:latest
+    container_name: cqrs
+    restart: unless-stopped
+    ports:
+      - "${CQRS_PORT:-8088}:8088"
+    environment:
+      - APP_SERVICES=${SERVICES}
+      - APP_AUTH_ENABLED=${APP_AUTH_ENABLED:-false}
+      - SPRING_DATA_MONGODB_HOST=${MONGODB_HOST:-mongodb}
+      - SPRING_DATA_MONGODB_PORT=${MONGODB_PORT:-27017}
+      - SPRING_DATA_MONGODB_USERNAME=${MONGODB_USER}
+      - SPRING_DATA_MONGODB_PASSWORD=${MONGODB_PASSWORD}
+      - SPRING_DATA_MONGODB_AUTHENTICATION_DATABASE=${MONGODB_AUTH_DB:-admin}
+      - SPRING_H2_CONSOLE_SETTINGS_WEB_ALLOW_OTHERS=true
+      - EUREKA_CLIENT_ENABLED=true
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://172.31.19.89:8761/eureka/
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - SPRING_RABBITMQ_HOST=172.31.19.89
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER}
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - mongodb-network
+
+  mongodb:
+    image: mongo:8.0.17
+    container_name: mongodb
+    restart: unless-stopped
+    ports:
+      - "${MONGODB_PORT:-27017}:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGODB_INIT_DB:-cqrs_query}
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    networks:
+      - mongodb-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo-express
+    restart: unless-stopped
+    ports:
+      - "${MONGO_EXPRESS_PORT:-8081}:8081"
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGODB_USER}:${MONGODB_PASSWORD}@mongodb:27017/?authSource=${MONGODB_AUTH_DB:-admin}
+      ME_CONFIG_BASICAUTH: "false"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - mongodb-network
+
+volumes:
+  mongodb_data:
+    driver: local
+  mongodb_config:
+    driver: local
+
+networks:
+  mongodb-network:
+    driver: bridge

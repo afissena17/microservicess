@@ -1,0 +1,50 @@
+server:
+  port: 9000
+
+spring:
+  application:
+    name: API-GATEWAY-MARKETPLACE
+  cloud:
+    gateway:
+      server:
+        webmvc:
+          routes:
+          - id: PRODUK-SERVICE
+            uri: ${PRODUK_SERVICE_URL:lb://PRODUK-SERVICE}
+            predicates:
+            - Path=/api/produk/**
+          - id: PELANGGAN-SERVICE
+            uri: ${PELANGGAN_SERVICE_URL:lb://PELANGGAN-SERVICE}
+            predicates:
+            - Path=/api/pelanggan/**
+          - id: ORDER-SERVICE
+            uri: ${ORDER_SERVICE_URL:lb://ORDER-SERVICE}
+            predicates:
+            - Path=/api/order/**
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: ${EUREKA_FETCH_REGISTRY:true}
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+  instance:
+    hostname: localhost
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: always
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+logging:
+  level:
+    org.springframework.web: INFO
+    com.anla: INFO

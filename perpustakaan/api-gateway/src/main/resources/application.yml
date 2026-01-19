@@ -1,0 +1,54 @@
+server:
+  port: 9001
+
+spring:
+  application:
+    name: API-GATEWAY-PERPUSTAKAAN
+  cloud:
+    gateway:
+      server:
+        webmvc:
+          routes:
+          - id: ANGGOTA-SERVICE
+            uri: ${ANGGOTA_SERVICE_URL:lb://ANGGOTA-SERVICE}
+            predicates:
+            - Path=/api/anggota/**
+          - id: BUKU-SERVICE
+            uri: ${BUKU_SERVICE_URL:lb://BUKU-SERVICE}
+            predicates:
+            - Path=/api/buku/**
+          - id: PEMINJAMAN-SERVICE
+            uri: ${PEMINJAMAN_SERVICE_URL:lb://PEMINJAMAN-SERVICE}
+            predicates:
+            - Path=/api/peminjaman/**
+          - id: PENGEMBALIAN-SERVICE
+            uri: ${PENGEMBALIAN_SERVICE_URL:lb://PENGEMBALIAN-SERVICE}
+            predicates:
+            - Path=/api/pengembalian/**
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: ${EUREKA_FETCH_REGISTRY:true}
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+  instance:
+    hostname: localhost
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: always
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+logging:
+  level:
+    org.springframework.web: INFO
+    com.anla: INFO

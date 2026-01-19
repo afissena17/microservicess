@@ -1,0 +1,181 @@
+pipeline {
+    agent any
+    
+    environment {
+        GITHUB_CREDENTIALS = credentials('github-token')
+        REPO_OWNER = 'itsanla'
+        REPO_NAME = 'microservice-2025'
+        FILE_PATH = 'kubernetes-cluster/all-services-k8s.yaml'
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('Get Latest Version') {
+            steps {
+                script {
+                    // Get commit message
+                    def commitMsg = sh(script: 'git log -1 --pretty=%B', returnStdout: true).trim()
+                    echo "Commit message: ${commitMsg}"
+                    
+                    // Get latest tag from GitHub tags API
+                    def latestTag = sh(
+                        script: """
+                            curl -s -H "Authorization: token \${GITHUB_CREDENTIALS_PSW}" \\
+                              -H "Accept: application/vnd.github.v3+json" \\
+                              https://api.github.com/repos/\${REPO_OWNER}/\${REPO_NAME}/tags \\
+                              | grep -oE '"name": "v[0-9]+\\.[0-9]+\\.[0-9]+"' | head -1 | cut -d'"' -f4 || echo ''
+                        """,
+                        returnStdout: true
+                    ).trim()
+                    
+                    if (latestTag == '' || latestTag == 'null') {
+                        env.CURRENT_VERSION = '0.0.0'
+                        echo "No previous tags found, starting from 0.0.0"
+                    } else {
+                        env.CURRENT_VERSION = latestTag.replaceAll('v', '')
+                        echo "Latest GitHub Tag: ${latestTag}"
+                    }
+                    
+                    // Parse version
+                    def versionParts = env.CURRENT_VERSION.split('\\.')
+                    def major = versionParts[0].toInteger()
+                    def minor = versionParts[1].toInteger()
+                    def patch = versionParts[2].toInteger()
+                    
+                    // Check commit message for version bump type
+                    if (commitMsg.contains('[major]')) {
+                        major += 1
+                        minor = 0
+                        patch = 0
+                        echo "Major version bump detected"
+                    } else if (commitMsg.contains('[minor]')) {
+                        minor += 1
+                        patch = 0
+                        echo "Minor version bump detected"
+                    } else {
+                        patch += 1
+                        echo "Patch version bump (default)"
+                    }
+                    
+                    env.NEW_VERSION = "${major}.${minor}.${patch}"
+                    env.NEW_TAG = "v${env.NEW_VERSION}"
+                    
+                    echo "Current Version: ${env.CURRENT_VERSION}"
+                    echo "New Version: ${env.NEW_VERSION}"
+                }
+            }
+        }
+        
+        stage('Check Changes') {
+            steps {
+                script {
+                    def changes = sh(
+                        script: "git diff HEAD~1 HEAD -- ${FILE_PATH}",
+                        returnStdout: true
+                    ).trim()
+                    
+                    if (changes == '') {
+                        echo "No changes in ${FILE_PATH}, skipping release"
+                        currentBuild.result = 'SUCCESS'
+                        return
+                    }
+                    env.HAS_CHANGES = 'true'
+                }
+            }
+        }
+        
+        stage('Create Git Tag') {
+            when {
+                expression { env.HAS_CHANGES == 'true' }
+            }
+            steps {
+                script {
+                    sh """
+                        git config user.name "Jenkins"
+                        git config user.email "jenkins@localhost"
+                        git tag -a ${env.NEW_TAG} -m "Release ${env.NEW_VERSION}"
+                        git push https://${GITHUB_CREDENTIALS_USR}:${GITHUB_CREDENTIALS_PSW}@github.com/${REPO_OWNER}/${REPO_NAME}.git ${env.NEW_TAG}
+                    """
+                }
+            }
+        }
+        
+        stage('Create GitHub Release') {
+            when {
+                expression { env.HAS_CHANGES == 'true' }
+            }
+            steps {
+                script {
+                    def releaseNotes = sh(
+                        script: "git log -1 --pretty=%B",
+                        returnStdout: true
+                    ).trim().replaceAll('"', '\\\\"').replaceAll('\n', '\\\\n')
+                    
+                    sh '''
+                        curl -X POST \
+                          -H "Authorization: token ''' + "${GITHUB_CREDENTIALS_PSW}" + '''" \
+                          -H "Accept: application/vnd.github.v3+json" \
+                          https://api.github.com/repos/''' + "${REPO_OWNER}/${REPO_NAME}" + '''/releases \
+                          -d '{"tag_name":"''' + "${env.NEW_TAG}" + '''","name":"Release ''' + "${env.NEW_VERSION}" + '''","body":"''' + releaseNotes + '''","draft":false,"prerelease":false}'
+                    '''
+                }
+            }
+        }
+        
+        stage('Upload Release Asset') {
+            when {
+                expression { env.HAS_CHANGES == 'true' }
+            }
+            steps {
+                script {
+                    // Get release ID
+                    def releaseId = sh(
+                        script: """
+                            curl -s -H "Authorization: token ${GITHUB_CREDENTIALS_PSW}" \
+                              https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases/tags/${env.NEW_TAG} \
+                              | grep '"id":' | head -1 | sed 's/[^0-9]*//g'
+                        """,
+                        returnStdout: true
+                    ).trim()
+                    
+                    // Upload file
+                    sh """
+                        curl -X POST \
+                          -H "Authorization: token ${GITHUB_CREDENTIALS_PSW}" \
+                          -H "Content-Type: application/x-yaml" \
+                          --data-binary @${FILE_PATH} \
+                          "https://uploads.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases/${releaseId}/assets?name=all-services-k8s.yaml"
+                    """
+                }
+            }
+        }
+        
+        stage('Tag as Latest') {
+            when {
+                expression { env.HAS_CHANGES == 'true' }
+            }
+            steps {
+                script {
+                    sh """
+                        git tag -f latest
+                        git push -f https://${GITHUB_CREDENTIALS_USR}:${GITHUB_CREDENTIALS_PSW}@github.com/${REPO_OWNER}/${REPO_NAME}.git latest
+                    """
+                }
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo "✅ GitHub Release ${env.NEW_VERSION} created successfully!"
+        }
+        failure {
+            echo "❌ Failed to create GitHub Release"
+        }
+    }
+}

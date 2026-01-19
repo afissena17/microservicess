@@ -1,0 +1,87 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: 80
+    targetPort: 15672
+    nodePort: 30672
+  - name: amqp
+    port: 5672
+    targetPort: 5672
+  - name: prometheus
+    port: 15692
+    targetPort: 15692
+  selector:
+    app: rabbitmq
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: rabbitmq
+  template:
+    metadata:
+      labels:
+        app: rabbitmq
+    spec:
+      securityContext:
+        fsGroup: 999
+      initContainers:
+      - name: fix-permissions
+        image: busybox:latest
+        command:
+        - sh
+        - -c
+        - |
+          chown -R 999:999 /var/lib/rabbitmq
+          chmod 700 /var/lib/rabbitmq
+          if [ -f /var/lib/rabbitmq/.erlang.cookie ]; then
+            chmod 600 /var/lib/rabbitmq/.erlang.cookie
+          fi
+        volumeMounts:
+        - name: rabbitmq-data
+          mountPath: /var/lib/rabbitmq
+      containers:
+      - name: rabbitmq
+        image: rabbitmq:3-management-alpine
+        ports:
+        - containerPort: 5672
+        - containerPort: 15672
+        - containerPort: 15692
+        env:
+        - name: RABBITMQ_DEFAULT_USER
+          value: "itsanla"
+        - name: RABBITMQ_DEFAULT_PASS
+          value: "070078"
+        - name: RABBITMQ_DEFAULT_VHOST
+          value: "/"
+        command:
+        - sh
+        - -c
+        - |
+          rabbitmq-plugins enable rabbitmq_prometheus --offline
+          docker-entrypoint.sh rabbitmq-server
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        volumeMounts:
+        - name: rabbitmq-data
+          mountPath: /var/lib/rabbitmq
+      volumes:
+      - name: rabbitmq-data
+        persistentVolumeClaim:
+          claimName: rabbitmq-pvc

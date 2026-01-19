@@ -1,0 +1,97 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Eureka Service Discovery
+  - job_name: 'eureka'
+    static_configs:
+      - targets: ['eurekaa.mooo.com:80']
+    metrics_path: '/actuator/prometheus'
+
+  # Perpustakaan Services (4 services)
+  - job_name: 'perpustakaan-gateway'
+    static_configs:
+      - targets: ['perpustakaan-gateway.mooo.com:80']
+    metrics_path: '/actuator/prometheus'
+
+  - job_name: 'anggota-service'
+    static_configs:
+      - targets: ['anggota.mooo.com:80']
+    metrics_path: '/actuator/prometheus'
+
+  - job_name: 'buku-service'
+    static_configs:
+      - targets: ['bukuu.mooo.com:80']
+    metrics_path: '/actuator/prometheus'
+
+  - job_name: 'peminjaman-service'
+    static_configs:
+      - targets: ['peminjamann.mooo.com:80']
+    metrics_path: '/actuator/prometheus'
+
+  - job_name: 'pengembalian-service'
+    static_configs:
+      - targets: ['pengembalian.mooo.com:80']
+    metrics_path: '/actuator/prometheus'
+
+  # Marketplace Services (4 services)
+  - job_name: 'marketplace-gateway'
+    static_configs:
+      - targets: ['marketplace-gateway.mooo.com:80']
+    metrics_path: '/actuator/prometheus'
+
+  - job_name: 'pelanggan-service'
+    static_configs:
+      - targets: ['pelanggan.mooo.com:80']
+    metrics_path: '/actuator/prometheus'
+
+  - job_name: 'produk-service'
+    static_configs:
+      - targets: ['produk.mooo.com:80']
+    metrics_path: '/actuator/prometheus'
+
+  - job_name: 'order-service'
+    static_configs:
+      - targets: ['orderr.mooo.com:80']
+    metrics_path: '/actuator/prometheus'
+
+  # Message Broker
+  - job_name: 'rabbitmq'
+    static_configs:
+      - targets: ['rabbittmq.mooo.com:15672']
+    metrics_path: '/api/prometheus'
+
+  # ELK Stack (Kibana only - ES & Logstash need exporters)
+  - job_name: 'kibana'
+    static_configs:
+      - targets: ['kibbana.mooo.com:80']
+    metrics_path: '/api/stats'
+
+  # Infrastructure Services
+  - job_name: 'jenkins'
+    static_configs:
+      - targets: ['jenkinss.mooo.com:80']
+    metrics_path: '/prometheus'
+
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['graffana.mooo.com:80']
+    metrics_path: '/metrics'
+
+  # CQRS Service (includes H2 console at dbh2.mooo.com)
+  - job_name: 'cqrs-service'
+    static_configs:
+      - targets: ['dbh2.mooo.com:80']
+    metrics_path: '/actuator/prometheus'
+
+  # Database Consoles
+  - job_name: 'mongo-express'
+    static_configs:
+      - targets: ['dbmongo.mooo.com:80']
+    metrics_path: '/metrics'

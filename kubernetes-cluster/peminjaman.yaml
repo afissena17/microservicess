@@ -1,0 +1,75 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: peminjaman
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8087
+    nodePort: 30087
+  selector:
+    app: peminjaman
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: peminjaman
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: peminjaman
+  template:
+    metadata:
+      labels:
+        app: peminjaman
+    spec:
+      containers:
+      - name: peminjaman
+        image: itsanla/peminjaman:latest
+        ports:
+        - containerPort: 8087
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "k8s"
+        - name: EUREKA_URL
+          value: "http://eureka/eureka"
+        - name: CQRS_SERVICE_URL
+          value: "http://cqrs"
+        - name: ANGGOTA_SERVICE_URL
+          value: "http://anggota"
+        - name: BUKU_SERVICE_URL
+          value: "http://buku"
+        - name: PENGEMBALIAN_SERVICE_URL
+          value: "http://pengembalian"
+        - name: RABBITMQ_HOST
+          value: "rabbitmq"
+        - name: RABBITMQ_PORT
+          value: "5672"
+        - name: RABBITMQ_USER
+          value: "itsanla"
+        - name: RABBITMQ_PASSWORD
+          value: "070078"
+        - name: LOGSTASH_HOST
+          value: "logstash"
+        - name: LOGSTASH_PORT
+          value: "5000"
+        - name: SPRING_RABBITMQ_HOST
+          value: "rabbitmq"
+        - name: SPRING_RABBITMQ_PORT
+          value: "5672"
+        - name: SPRING_RABBITMQ_USERNAME
+          value: "itsanla"
+        - name: SPRING_RABBITMQ_PASSWORD
+          value: "070078"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
