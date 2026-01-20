@@ -81,7 +81,7 @@ def buildAndPushService(String dirPath, String imageName) {
         echo "=== Building ${imageName} ==="
         // 1. Build JAR
         // Skip tests untuk mempercepat, hapus '-DskipTests' jika ingin menjalankan test
-        bat 'mvn clean package -DskipTests'
+        sh 'mvn clean package -DskipTests'
 
         // 2. Build Docker Image
         echo "=== Docker Build ${imageName} ==="
@@ -89,17 +89,17 @@ def buildAndPushService(String dirPath, String imageName) {
             def imageTag = "${env.DOCKER_HUB_USER}/${imageName}:latest"
             
             // Build image
-            bat "docker build -t ${imageTag} ."
+            sh "docker build -t ${imageTag} ."
 
             // 3. Login & Push ke Docker Hub
             echo "=== Pushing to Docker Hub ==="
             withCredentials([usernamePassword(credentialsId: env.DOCKER_CREDENTIALS_ID, passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
                 // Login (gunakan --password-stdin untuk keamanan)
-                bat "echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% --password-stdin"
+                sh "echo \$DOCKER_PASSWORD | docker login -u \$DOCKER_USERNAME --password-stdin"
                 // Push
-                bat "docker push ${imageTag}"
+                sh "docker push ${imageTag}"
                 // Logout cleanup
-                bat "docker logout"
+                sh "docker logout"
             }
         }
     }
