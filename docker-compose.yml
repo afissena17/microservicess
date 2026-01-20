@@ -15,6 +15,24 @@ services:
     networks:
       - microservices
 
+  jenkins:
+    image: jenkins/jenkins:lts-jdk17
+    container_name: jenkins
+    privileged: true
+    user: root
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    environment:
+      - JAVA_OPTS=-Xmx1024m
+    volumes:
+      - jenkins-data:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - microservices
+    restart: unless-stopped
+
+
   mongodb:
     image: mongo:8.0.17
     container_name: mongodb
@@ -33,7 +51,7 @@ services:
     image: mongo-express:latest
     container_name: mongo-express
     ports:
-      - "8081:8081"
+      - "8091:8081"
     environment:
       - ME_CONFIG_MONGODB_URL=mongodb://itssena:070078@mongodb/admin
       - ME_CONFIG_BASICAUTH_USERNAME=itssena
@@ -340,6 +358,7 @@ services:
       - microservices
 
 volumes:
+  jenkins-data:
   mongodb-data:
   rabbitmq-data:
   elasticsearch-data:
