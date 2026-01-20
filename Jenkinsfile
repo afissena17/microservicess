@@ -3,7 +3,7 @@ pipeline {
 
     tools {
         maven 'maven3' 
-        jdk 'jdk17'
+        jdk 'jdk 17'
         // Opsional: Jika menggunakan docker tool, uncomment baris bawah
         // docker 'docker' 
     }
