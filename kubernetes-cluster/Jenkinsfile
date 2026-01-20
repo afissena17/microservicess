@@ -3,7 +3,7 @@ pipeline {
     
     environment {
         GITHUB_CREDENTIALS = credentials('github-token')
-        REPO_OWNER = 'itsanla'
+        REPO_OWNER = 'itssena'
         REPO_NAME = 'microservice-2025'
         FILE_PATH = 'kubernetes-cluster/all-services-k8s.yaml'
     }

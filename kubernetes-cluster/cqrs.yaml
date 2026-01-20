@@ -30,7 +30,7 @@ spec:
     spec:
       containers:
       - name: cqrs
-        image: itsanla/cqrs:latest
+        image: itssena/cqrs:latest
         ports:
         - containerPort: 8088
         env:
@@ -43,7 +43,7 @@ spec:
         - name: SPRING_DATA_MONGODB_PORT
           value: "27017"
         - name: SPRING_DATA_MONGODB_USERNAME
-          value: "itsanla"
+          value: "itssena"
         - name: SPRING_DATA_MONGODB_PASSWORD
           value: "070078"
         - name: SPRING_DATA_MONGODB_AUTHENTICATION_DATABASE
@@ -61,7 +61,7 @@ spec:
         - name: SPRING_RABBITMQ_PORT
           value: "5672"
         - name: SPRING_RABBITMQ_USERNAME
-          value: "itsanla"
+          value: "itssena"
         - name: SPRING_RABBITMQ_PASSWORD
           value: "070078"
         resources:

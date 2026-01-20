@@ -8,7 +8,7 @@
 		<version>3.5.5</version>
 		<relativePath/>
 	</parent>
-	<groupId>com.anla</groupId>
+	<groupId>com.sena</groupId>
 	<artifactId>Buku</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Buku</name>

@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # ==================== BUKU SERVICE ====================
   buku-service:
-    image: itsanla/buku:latest
+    image: itssena/buku:latest
     container_name: buku-service
     ports:
       - "8084:8084"
@@ -36,7 +36,7 @@ services:
 
   # ==================== ANGGOTA SERVICE ====================
   anggota-service:
-    image: itsanla/anggota:latest
+    image: itssena/anggota:latest
     container_name: anggota-service
     ports:
       - "8085:8085"
@@ -69,7 +69,7 @@ services:
 
   # ==================== PENGEMBALIAN SERVICE ====================
   pengembalian-service:
-    image: itsanla/pengembalian:latest
+    image: itssena/pengembalian:latest
     container_name: pengembalian-service
     ports:
       - "8086:8086"
@@ -102,7 +102,7 @@ services:
 
   # ==================== PEMINJAMAN SERVICE ====================
   peminjaman-service:
-    image: itsanla/peminjaman:latest
+    image: itssena/peminjaman:latest
     container_name: peminjaman-service
     ports:
       - "8087:8087"

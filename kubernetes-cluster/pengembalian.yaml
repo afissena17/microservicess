@@ -30,7 +30,7 @@ spec:
     spec:
       containers:
       - name: pengembalian
-        image: itsanla/pengembalian:latest
+        image: itssena/pengembalian:latest
         ports:
         - containerPort: 8086
         env:
@@ -49,7 +49,7 @@ spec:
         - name: SPRING_RABBITMQ_PORT
           value: "5672"
         - name: SPRING_RABBITMQ_USERNAME
-          value: "itsanla"
+          value: "itssena"
         - name: SPRING_RABBITMQ_PASSWORD
           value: "070078"
         resources:

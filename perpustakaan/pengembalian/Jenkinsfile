@@ -4,8 +4,8 @@ pipeline {
     environment {
         DOCKER_HUB_CREDENTIALS = credentials('docker-token')
         GHCR_CREDENTIALS = credentials('github-token')
-        DOCKER_IMAGE = 'itsanla/pengembalian'
-        GHCR_IMAGE = 'ghcr.io/itsanla/pengembalian'
+        DOCKER_IMAGE = 'itssena/pengembalian'
+        GHCR_IMAGE = 'ghcr.io/itssena/pengembalian'
         SERVICE_NAME = 'pengembalian'
     }
     

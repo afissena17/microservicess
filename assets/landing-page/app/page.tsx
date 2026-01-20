@@ -27,21 +27,21 @@ const services = [
 
 const dockerImages = [
   { category: "Images Perpustakaan", items: [
-    { url: "https://hub.docker.com/r/itsanla/perpustakaan-gateway", name: "Perpustakaan Gateway" },
-    { url: "https://hub.docker.com/r/itsanla/anggota", name: "Anggota" },
-    { url: "https://hub.docker.com/r/itsanla/buku", name: "Buku" },
-    { url: "https://hub.docker.com/r/itsanla/peminjaman", name: "Peminjaman" },
-    { url: "https://hub.docker.com/r/itsanla/pengembalian", name: "Pengembalian" },
+    { url: "https://hub.docker.com/r/itssena/perpustakaan-gateway", name: "Perpustakaan Gateway" },
+    { url: "https://hub.docker.com/r/itssena/anggota", name: "Anggota" },
+    { url: "https://hub.docker.com/r/itssena/buku", name: "Buku" },
+    { url: "https://hub.docker.com/r/itssena/peminjaman", name: "Peminjaman" },
+    { url: "https://hub.docker.com/r/itssena/pengembalian", name: "Pengembalian" },
   ]},
   { category: "Images Marketplace", items: [
-    { url: "https://hub.docker.com/r/itsanla/marketplace-gateway", name: "Marketplace Gateway" },
-    { url: "https://hub.docker.com/r/itsanla/pelanggan", name: "Pelanggan" },
-    { url: "https://hub.docker.com/r/itsanla/produk", name: "Produk" },
-    { url: "https://hub.docker.com/r/itsanla/order", name: "Order" },
+    { url: "https://hub.docker.com/r/itssena/marketplace-gateway", name: "Marketplace Gateway" },
+    { url: "https://hub.docker.com/r/itssena/pelanggan", name: "Pelanggan" },
+    { url: "https://hub.docker.com/r/itssena/produk", name: "Produk" },
+    { url: "https://hub.docker.com/r/itssena/order", name: "Order" },
   ]},
   { category: "Images Infrastructure", items: [
-    { url: "https://hub.docker.com/r/itsanla/eureka", name: "Eureka" },
-    { url: "https://hub.docker.com/r/itsanla/cqrs", name: "CQRS" },
+    { url: "https://hub.docker.com/r/itssena/eureka", name: "Eureka" },
+    { url: "https://hub.docker.com/r/itssena/cqrs", name: "CQRS" },
     { url: "https://hub.docker.com/_/rabbitmq", name: "RabbitMQ" },
     { url: "https://hub.docker.com/_/mongo", name: "MongoDB" },
     { url: "https://hub.docker.com/_/mongo-express", name: "Mongo Express" },
@@ -92,7 +92,7 @@ export default function Home() {
               ))}
               
               <a
-                href="https://anla.my.id"
+                href="https://sena.my.id"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="ml-4 px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 font-medium shadow-sm transition-all"
@@ -108,7 +108,7 @@ export default function Home() {
         <div className="container mx-auto px-4 py-20 max-w-7xl">
           <div className="grid md:grid-cols-2 gap-12 items-end">
             <div className="self-start">
-              <h1 className="text-5xl font-bold mb-3">Anla Harpanda</h1>
+              <h1 className="text-5xl font-bold mb-3">sena Harpanda</h1>
               <p className="text-2xl mb-8 opacity-90">NIM: 2311083015</p>
               <p className="text-lg leading-relaxed opacity-95">
                 Microservice ini dibangun dalam arsitektur Kubernetes cluster yang menghubungkan 22 service dengan 16 URL endpoint. 

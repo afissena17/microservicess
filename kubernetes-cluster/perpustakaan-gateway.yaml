@@ -30,7 +30,7 @@ spec:
     spec:
       containers:
       - name: perpustakaan-gateway
-        image: itsanla/perpustakaan-gateway:latest
+        image: itssena/perpustakaan-gateway:latest
         ports:
         - containerPort: 9001
         env:

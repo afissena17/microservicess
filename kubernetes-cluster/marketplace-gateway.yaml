@@ -30,7 +30,7 @@ spec:
     spec:
       containers:
       - name: marketplace-gateway
-        image: itsanla/marketplace-gateway:latest
+        image: itssena/marketplace-gateway:latest
         ports:
         - containerPort: 9000
         env:

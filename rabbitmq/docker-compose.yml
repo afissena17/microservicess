@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # ==================== EUREKA SERVER ====================
   eureka-server:
-    image: itsanla/eureka:latest
+    image: itssena/eureka:latest
     container_name: eureka-server
     ports:
       - "8761:8761"

@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   cqrs:
-    image: itsanla/cqrs:latest
+    image: itssena/cqrs:latest
     container_name: cqrs
     restart: unless-stopped
     ports:

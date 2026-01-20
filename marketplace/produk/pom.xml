@@ -8,11 +8,11 @@
 		<version>3.5.5</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.anla</groupId>
+	<groupId>com.sena</groupId>
 	<artifactId>Produk</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Produk</name>
-	<description>anlaHarpanda1</description>
+	<description>senaHarpanda1</description>
 	<url/>
 	<licenses>
 		<license/>

@@ -178,7 +178,7 @@ spec:
     spec:
       containers:
       - name: eureka
-        image: itsanla/eureka:latest
+        image: itssena/eureka:latest
         ports:
         - containerPort: 8761
         env:
@@ -232,7 +232,7 @@ spec:
     spec:
       containers:
       - name: cqrs
-        image: itsanla/cqrs:latest
+        image: itssena/cqrs:latest
         ports:
         - containerPort: 8088
         env:
@@ -245,7 +245,7 @@ spec:
         - name: SPRING_DATA_MONGODB_PORT
           value: "27017"
         - name: SPRING_DATA_MONGODB_USERNAME
-          value: "itsanla"
+          value: "itssena"
         - name: SPRING_DATA_MONGODB_PASSWORD
           value: "070078"
         - name: SPRING_DATA_MONGODB_AUTHENTICATION_DATABASE
@@ -263,7 +263,7 @@ spec:
         - name: SPRING_RABBITMQ_PORT
           value: "5672"
         - name: SPRING_RABBITMQ_USERNAME
-          value: "itsanla"
+          value: "itssena"
         - name: SPRING_RABBITMQ_PASSWORD
           value: "070078"
         resources:
@@ -325,7 +325,7 @@ spec:
         - containerPort: 27017
         env:
         - name: MONGO_INITDB_ROOT_USERNAME
-          value: "itsanla"
+          value: "itssena"
         - name: MONGO_INITDB_ROOT_PASSWORD
           value: "070078"
         - name: MONGO_INITDB_DATABASE
@@ -348,7 +348,7 @@ spec:
         - containerPort: 9216
         env:
         - name: MONGODB_URI
-          value: "mongodb://itsanla:070078@localhost:27017"
+          value: "mongodb://itssena:070078@localhost:27017"
         resources:
           requests:
             memory: "128Mi"
@@ -402,9 +402,9 @@ spec:
         - containerPort: 8081
         env:
         - name: ME_CONFIG_MONGODB_URL
-          value: "mongodb://itsanla:070078@mongodb/admin"
+          value: "mongodb://itssena:070078@mongodb/admin"
         - name: ME_CONFIG_BASICAUTH_USERNAME
-          value: "itsanla"
+          value: "itssena"
         - name: ME_CONFIG_BASICAUTH_PASSWORD
           value: "070078"
         resources:
@@ -479,7 +479,7 @@ spec:
         - containerPort: 15692
         env:
         - name: RABBITMQ_DEFAULT_USER
-          value: "itsanla"
+          value: "itssena"
         - name: RABBITMQ_DEFAULT_PASS
           value: "070078"
         - name: RABBITMQ_DEFAULT_VHOST
@@ -858,7 +858,7 @@ spec:
         - containerPort: 3000
         env:
         - name: GF_SECURITY_ADMIN_USER
-          value: "itsanla"
+          value: "itssena"
         - name: GF_SECURITY_ADMIN_PASSWORD
           value: "070078"
         - name: GF_USERS_ALLOW_SIGN_UP
@@ -999,7 +999,7 @@ spec:
     spec:
       containers:
       - name: buku
-        image: itsanla/buku:latest
+        image: itssena/buku:latest
         ports:
         - containerPort: 8084
         env:
@@ -1018,7 +1018,7 @@ spec:
         - name: SPRING_RABBITMQ_PORT
           value: "5672"
         - name: SPRING_RABBITMQ_USERNAME
-          value: "itsanla"
+          value: "itssena"
         - name: SPRING_RABBITMQ_PASSWORD
           value: "070078"
           value: "5000"
@@ -1064,7 +1064,7 @@ spec:
     spec:
       containers:
       - name: anggota
-        image: itsanla/anggota:latest
+        image: itssena/anggota:latest
         ports:
         - containerPort: 8085
         env:
@@ -1083,7 +1083,7 @@ spec:
         - name: SPRING_RABBITMQ_PORT
           value: "5672"
         - name: SPRING_RABBITMQ_USERNAME
-          value: "itsanla"
+          value: "itssena"
         - name: SPRING_RABBITMQ_PASSWORD
           value: "070078"
         resources:
@@ -1128,7 +1128,7 @@ spec:
     spec:
       containers:
       - name: peminjaman
-        image: itsanla/peminjaman:latest
+        image: itssena/peminjaman:latest
         ports:
         - containerPort: 8087
         env:
@@ -1149,7 +1149,7 @@ spec:
         - name: RABBITMQ_PORT
           value: "5672"
         - name: RABBITMQ_USER
-          value: "itsanla"
+          value: "itssena"
         - name: RABBITMQ_PASSWORD
           value: "070078"
         - name: LOGSTASH_HOST
@@ -1161,7 +1161,7 @@ spec:
         - name: SPRING_RABBITMQ_PORT
           value: "5672"
         - name: SPRING_RABBITMQ_USERNAME
-          value: "itsanla"
+          value: "itssena"
         - name: SPRING_RABBITMQ_PASSWORD
           value: "070078"
         resources:
@@ -1206,7 +1206,7 @@ spec:
     spec:
       containers:
       - name: pengembalian
-        image: itsanla/pengembalian:latest
+        image: itssena/pengembalian:latest
         ports:
         - containerPort: 8086
         env:
@@ -1225,7 +1225,7 @@ spec:
         - name: SPRING_RABBITMQ_PORT
           value: "5672"
         - name: SPRING_RABBITMQ_USERNAME
-          value: "itsanla"
+          value: "itssena"
         - name: SPRING_RABBITMQ_PASSWORD
           value: "070078"
         resources:
@@ -1270,7 +1270,7 @@ spec:
     spec:
       containers:
       - name: perpustakaan-gateway
-        image: itsanla/perpustakaan-gateway:latest
+        image: itssena/perpustakaan-gateway:latest
         ports:
         - containerPort: 9001
         env:
@@ -1324,7 +1324,7 @@ spec:
     spec:
       containers:
       - name: produk
-        image: itsanla/produk:latest
+        image: itssena/produk:latest
         ports:
         - containerPort: 8081
         env:
@@ -1343,7 +1343,7 @@ spec:
         - name: SPRING_RABBITMQ_PORT
           value: "5672"
         - name: SPRING_RABBITMQ_USERNAME
-          value: "itsanla"
+          value: "itssena"
         - name: SPRING_RABBITMQ_PASSWORD
           value: "070078"
         resources:
@@ -1388,7 +1388,7 @@ spec:
     spec:
       containers:
       - name: pelanggan
-        image: itsanla/pelanggan:latest
+        image: itssena/pelanggan:latest
         ports:
         - containerPort: 8082
         env:
@@ -1407,7 +1407,7 @@ spec:
         - name: SPRING_RABBITMQ_PORT
           value: "5672"
         - name: SPRING_RABBITMQ_USERNAME
-          value: "itsanla"
+          value: "itssena"
         - name: SPRING_RABBITMQ_PASSWORD
           value: "070078"
           value: "5000"
@@ -1453,7 +1453,7 @@ spec:
     spec:
       containers:
       - name: order
-        image: itsanla/order:latest
+        image: itssena/order:latest
         ports:
         - containerPort: 8083
         env:
@@ -1476,7 +1476,7 @@ spec:
         - name: SPRING_RABBITMQ_PORT
           value: "5672"
         - name: SPRING_RABBITMQ_USERNAME
-          value: "itsanla"
+          value: "itssena"
         - name: SPRING_RABBITMQ_PASSWORD
           value: "070078"
         resources:
@@ -1521,7 +1521,7 @@ spec:
     spec:
       containers:
       - name: marketplace-gateway
-        image: itsanla/marketplace-gateway:latest
+        image: itssena/marketplace-gateway:latest
         ports:
         - containerPort: 9000
         env:

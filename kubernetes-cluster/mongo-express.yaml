@@ -35,9 +35,9 @@ spec:
         - containerPort: 8081
         env:
         - name: ME_CONFIG_MONGODB_URL
-          value: "mongodb://itsanla:070078@mongodb/admin"
+          value: "mongodb://itssena:070078@mongodb/admin"
         - name: ME_CONFIG_BASICAUTH_USERNAME
-          value: "itsanla"
+          value: "itssena"
         - name: ME_CONFIG_BASICAUTH_PASSWORD
           value: "070078"
         resources:

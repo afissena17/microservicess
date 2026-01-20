@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # Infrastructure
   eureka:
-    image: itsanla/eureka:latest
+    image: itssena/eureka:latest
     container_name: eureka
     ports:
       - "8761:8761"
@@ -21,7 +21,7 @@ services:
     ports:
       - "27017:27017"
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=itsanla
+      - MONGO_INITDB_ROOT_USERNAME=itssena
       - MONGO_INITDB_ROOT_PASSWORD=070078
       - MONGO_INITDB_DATABASE=cqrs_query
     volumes:
@@ -35,8 +35,8 @@ services:
     ports:
       - "8081:8081"
     environment:
-      - ME_CONFIG_MONGODB_URL=mongodb://itsanla:070078@mongodb/admin
-      - ME_CONFIG_BASICAUTH_USERNAME=itsanla
+      - ME_CONFIG_MONGODB_URL=mongodb://itssena:070078@mongodb/admin
+      - ME_CONFIG_BASICAUTH_USERNAME=itssena
       - ME_CONFIG_BASICAUTH_PASSWORD=070078
     depends_on:
       - mongodb
@@ -51,7 +51,7 @@ services:
       - "15672:15672"
       - "15692:15692"
     environment:
-      - RABBITMQ_DEFAULT_USER=itsanla
+      - RABBITMQ_DEFAULT_USER=itssena
       - RABBITMQ_DEFAULT_PASS=070078
       - RABBITMQ_DEFAULT_VHOST=/
     command: sh -c "rabbitmq-plugins enable rabbitmq_prometheus --offline && docker-entrypoint.sh rabbitmq-server"
@@ -123,7 +123,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - GF_SECURITY_ADMIN_USER=itsanla
+      - GF_SECURITY_ADMIN_USER=itssena
       - GF_SECURITY_ADMIN_PASSWORD=070078
       - GF_USERS_ALLOW_SIGN_UP=false
     volumes:
@@ -134,7 +134,7 @@ services:
       - microservices
 
   cqrs:
-    image: itsanla/cqrs:latest
+    image: itssena/cqrs:latest
     container_name: cqrs
     ports:
       - "8088:8088"
@@ -143,7 +143,7 @@ services:
       - APP_AUTH_ENABLED=false
       - SPRING_DATA_MONGODB_HOST=mongodb
       - SPRING_DATA_MONGODB_PORT=27017
-      - SPRING_DATA_MONGODB_USERNAME=itsanla
+      - SPRING_DATA_MONGODB_USERNAME=itssena
       - SPRING_DATA_MONGODB_PASSWORD=070078
       - SPRING_DATA_MONGODB_AUTHENTICATION_DATABASE=admin
       - SPRING_H2_CONSOLE_SETTINGS_WEB_ALLOW_OTHERS=true
@@ -151,7 +151,7 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka
       - SPRING_RABBITMQ_HOST=rabbitmq
       - SPRING_RABBITMQ_PORT=5672
-      - SPRING_RABBITMQ_USERNAME=itsanla
+      - SPRING_RABBITMQ_USERNAME=itssena
       - SPRING_RABBITMQ_PASSWORD=070078
     volumes:
       - cqrs-data:/data/h2
@@ -164,7 +164,7 @@ services:
 
   # Perpustakaan Services
   buku:
-    image: itsanla/buku:latest
+    image: itssena/buku:latest
     container_name: buku
     ports:
       - "8084:8084"
@@ -182,7 +182,7 @@ services:
       - microservices
 
   anggota:
-    image: itsanla/anggota:latest
+    image: itssena/anggota:latest
     container_name: anggota
     ports:
       - "8085:8085"
@@ -200,7 +200,7 @@ services:
       - microservices
 
   peminjaman:
-    image: itsanla/peminjaman:latest
+    image: itssena/peminjaman:latest
     container_name: peminjaman
     ports:
       - "8087:8087"
@@ -213,7 +213,7 @@ services:
       - PENGEMBALIAN_SERVICE_URL=http://pengembalian:8086
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
-      - RABBITMQ_USER=itsanla
+      - RABBITMQ_USER=itssena
       - RABBITMQ_PASSWORD=070078
       - LOGSTASH_HOST=logstash
       - LOGSTASH_PORT=5000
@@ -226,7 +226,7 @@ services:
       - microservices
 
   pengembalian:
-    image: itsanla/pengembalian:latest
+    image: itssena/pengembalian:latest
     container_name: pengembalian
     ports:
       - "8086:8086"
@@ -244,7 +244,7 @@ services:
       - microservices
 
   perpustakaan-gateway:
-    image: itsanla/perpustakaan-gateway:latest
+    image: itssena/perpustakaan-gateway:latest
     container_name: perpustakaan-gateway
     ports:
       - "9001:9001"
@@ -265,7 +265,7 @@ services:
 
   # Marketplace Services
   produk:
-    image: itsanla/produk:latest
+    image: itssena/produk:latest
     container_name: produk
     ports:
       - "8081:8081"
@@ -283,7 +283,7 @@ services:
       - microservices
 
   pelanggan:
-    image: itsanla/pelanggan:latest
+    image: itssena/pelanggan:latest
     container_name: pelanggan
     ports:
       - "8082:8082"
@@ -301,7 +301,7 @@ services:
       - microservices
 
   order:
-    image: itsanla/order:latest
+    image: itssena/order:latest
     container_name: order
     ports:
       - "8083:8083"
@@ -321,7 +321,7 @@ services:
       - microservices
 
   marketplace-gateway:
-    image: itsanla/marketplace-gateway:latest
+    image: itssena/marketplace-gateway:latest
     container_name: marketplace-gateway
     ports:
       - "9000:9000"

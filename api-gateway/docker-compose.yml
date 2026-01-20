@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # ==================== MARKETPLACE API GATEWAY ====================
   marketplace-gateway:
-    image: itsanla/marketplace-gateway:latest
+    image: itssena/marketplace-gateway:latest
     container_name: marketplace-gateway
     ports:
       - "9000:9000"
@@ -25,7 +25,7 @@ services:
 
   # ==================== PERPUSTAKAAN API GATEWAY ====================
   perpustakaan-gateway:
-    image: itsanla/perpustakaan-gateway:latest
+    image: itssena/perpustakaan-gateway:latest
     container_name: perpustakaan-gateway
     ports:
       - "9001:9001"
