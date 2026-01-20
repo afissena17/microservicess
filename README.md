@@ -128,7 +128,7 @@
 ├── cqrs/                  # Event sourcing service
 ├── eureka/                # Service discovery
 ├── kubernetes-cluster/    # K8s manifests
-├── jenkins/               # CI/CD configs
+├── jenkins/               # CI/CD configs & Unified Pipeline
 ├── elk/                   # ELK Stack configs
 ├── monitor/               # Prometheus & Grafana
 └── docker-compose.yml     # Local development

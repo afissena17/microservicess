@@ -53,13 +53,21 @@ pipeline {
                         }
                     }
                 }
+                stage('Perpustakaan API Gateway') {
+                    steps {
+                        script {
+                            // Nama image disesuaikan dengan docker-compose: itssena/perpustakaan-gateway
+                            buildAndPushService('perpustakaan/api-gateway', 'perpustakaan-gateway')
+                        }
+                    }
+                }
             }
         }
     }
 
     post {
         success {
-            echo 'Pipeline berhasil! Semua service telah di-push ke Docker Hub.'
+            echo 'Pipeline berhasil! Semua 5 service (termasuk API Gateway) telah di-push ke Docker Hub.'
         }
         failure {
             echo 'Pipeline gagal. Silakan cek logs.'
@@ -68,17 +76,17 @@ pipeline {
 }
 
 // Helper Function untuk Build & Push
-def buildAndPushService(String dirPath, String serviceName) {
+def buildAndPushService(String dirPath, String imageName) {
     dir(dirPath) {
-        echo "=== Building ${serviceName} ==="
+        echo "=== Building ${imageName} ==="
         // 1. Build JAR
         // Skip tests untuk mempercepat, hapus '-DskipTests' jika ingin menjalankan test
         bat 'mvn clean package -DskipTests'
 
         // 2. Build Docker Image
-        echo "=== Docker Build ${serviceName} ==="
+        echo "=== Docker Build ${imageName} ==="
         script {
-            def imageTag = "${env.DOCKER_HUB_USER}/${serviceName}:latest"
+            def imageTag = "${env.DOCKER_HUB_USER}/${imageName}:latest"
             
             // Build image
             bat "docker build -t ${imageTag} ."
